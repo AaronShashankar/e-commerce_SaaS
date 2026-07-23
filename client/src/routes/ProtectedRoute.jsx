@@ -1,0 +1,3 @@
+import { Navigate, useLocation } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext.jsx'
+export function ProtectedRoute({ roles, children }) { const { user, loading } = useAuth(); const location = useLocation(); if (loading) return <p className="p-8 text-center">Loading session…</p>; if (!user) return <Navigate to="/login" replace state={{ from: location }} />; if (!roles.includes(user.role)) return <Navigate to="/unauthorized" replace />; if (user.role === 'seller' && user.approvalStatus === 'pending' && location.pathname !== '/seller/pending') return <Navigate to="/seller/pending" replace />; return children }
