@@ -11,8 +11,8 @@ const registerSchema = z
     email,
     password,
     role: z.enum(["seller", "buyer"]),
-    businessName: z.string().trim().min(2).max(120).optional(),
-    businessAddress: z.string().trim().min(5).max(300).optional(),
+    businessName: z.preprocess(v => v || undefined, z.string().trim().min(2).max(120).optional()),
+    businessAddress: z.preprocess(v => v || undefined, z.string().trim().min(5).max(300).optional()),
   })
   .superRefine((data, ctx) => {
     if (data.role === "seller" && !data.businessName)

@@ -9,13 +9,19 @@ import {
   requireSecret,
 } from "../config/tokens.js";
 
+// Load pepper from env (fallback to requireSecret so it fails loud if missing)
+const PASSWORD_PEPPER =
+  process.env.PASSWORD_PEPPER || requireSecret("PASSWORD_PEPPER");
+
+function applyPepper(password) {
+  return password + PASSWORD_PEPPER;
+}
+
 function validationError(res, result) {
-  return res
-    .status(400)
-    .json({
-      message: "Validation failed",
-      errors: result.error.flatten().fieldErrors,
-    });
+  return res.status(400).json({
+    message: "Validation failed",
+    errors: result.error.flatten().fieldErrors,
+  });
 }
 
 function publicUser(user) {
@@ -36,7 +42,10 @@ async function register(req, res, next) {
     const exists = await prisma.user.findUnique({ where: { email } });
     if (exists)
       return res.status(409).json({ message: "Email already in use" });
-    const passwordHash = await bcrypt.hash(password, 12);
+
+    // Hash with pepper applied
+    const passwordHash = await bcrypt.hash(applyPepper(password), 12);
+
     const user = await prisma.user.create({
       data: {
         email,
@@ -66,7 +75,10 @@ async function login(req, res, next) {
     });
     if (
       !user ||
-      !(await bcrypt.compare(parsed.data.password, user.passwordHash))
+      !(await bcrypt.compare(
+        applyPepper(parsed.data.password),
+        user.passwordHash,
+      ))
     )
       return res.status(401).json({ message: "Invalid email or password" });
     if (!user.isActive)
@@ -110,8 +122,11 @@ async function refreshToken(req, res, next) {
 
 function logout(req, res) {
   res.clearCookie("refreshToken", {
-    ...refreshCookieOptions,
-    maxAge: undefined,
+    httpOnly: refreshCookieOptions.httpOnly,
+    secure: refreshCookieOptions.secure,
+    sameSite: refreshCookieOptions.sameSite,
+    path: refreshCookieOptions.path,
+    expires: new Date(0),
   });
   return res.status(204).send();
 }

@@ -24,7 +24,13 @@ export default function Register() {
       return setError("Passwords do not match");
     setBusy(true);
     try {
-      await register(form);
+      // Strip confirmPassword and seller-only fields when registering as buyer
+      const { confirmPassword, ...rest } = form;
+      const payload =
+        rest.role === "buyer"
+          ? { email: rest.email, password: rest.password, role: rest.role }
+          : rest;
+      await register(payload);
       navigate("/login", { replace: true });
     } catch (err) {
       setError(

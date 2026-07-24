@@ -8,6 +8,17 @@ import {
   Unauthorized,
 } from "./pages/Pages.jsx";
 import SellerStatusGate from "./components/seller/SellerStatusGate.jsx";
+import { useAuth } from "./hooks/useAuth.js";
+
+/** Redirects to the correct home route for the logged-in user's role.
+ *  Sellers → /seller/dashboard, everyone else → /login or /  */
+function RoleBasedRedirect() {
+  const { user, loading } = useAuth();
+  if (loading) return <p className="p-8 text-center">Loading…</p>;
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role === "seller") return <Navigate to="/seller/dashboard" replace />;
+  return <Navigate to="/" replace />;
+}
 
 export default function App() {
   return (
@@ -31,7 +42,8 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* Catch-all: redirect each role to their correct home instead of blindly going to "/" */}
+      <Route path="*" element={<RoleBasedRedirect />} />
     </Routes>
   );
 }

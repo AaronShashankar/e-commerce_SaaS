@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import api, { setAccessToken, setSessionRefreshHandler } from "../api/http.js";
 import { AuthContext } from "./auth-context.js";
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     setSessionRefreshHandler((session) => setUser(session?.user ?? null));
     api
@@ -16,15 +18,18 @@ export function AuthProvider({ children }) {
       .finally(() => setLoading(false));
     return () => setSessionRefreshHandler(null);
   }, []);
+
   async function login(credentials) {
     const { data } = await api.post("/auth/login", credentials);
     setAccessToken(data.accessToken);
     setUser(data.user);
     return data.user;
   }
+
   async function register(details) {
     return (await api.post("/auth/register", details)).data;
   }
+  
   async function logout() {
     try {
       await api.post("/auth/logout");
@@ -33,6 +38,7 @@ export function AuthProvider({ children }) {
       setUser(null);
     }
   }
+  
   return (
     <AuthContext.Provider value={{ user, loading, login, register, logout }}>
       {children}
