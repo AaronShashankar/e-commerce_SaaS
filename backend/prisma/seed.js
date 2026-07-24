@@ -1,6 +1,8 @@
-require("dotenv").config();
-const bcrypt = require("bcryptjs");
-const prisma = require("../src/services/prisma");
+import dotenv from "dotenv";
+import bcrypt from "bcryptjs";
+import prisma from "../src/services/prisma.js";
+
+dotenv.config();
 
 async function main() {
   const { ADMIN_EMAIL, ADMIN_PASSWORD } = process.env;

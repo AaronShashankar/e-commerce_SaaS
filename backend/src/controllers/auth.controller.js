@@ -1,11 +1,21 @@
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const prisma = require("../services/prisma");
-const { registerSchema, loginSchema } = require("../validators/auth.validators");
-const { createAccessToken, createRefreshToken, refreshCookieOptions, requireSecret } = require("../config/tokens");
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import prisma from "../services/prisma.js";
+import { registerSchema, loginSchema } from "../validators/auth.validators.js";
+import {
+  createAccessToken,
+  createRefreshToken,
+  refreshCookieOptions,
+  requireSecret,
+} from "../config/tokens.js";
 
 function validationError(res, result) {
-  return res.status(400).json({ message: "Validation failed", errors: result.error.flatten().fieldErrors });
+  return res
+    .status(400)
+    .json({
+      message: "Validation failed",
+      errors: result.error.flatten().fieldErrors,
+    });
 }
 
 function publicUser(user) {
@@ -24,7 +34,8 @@ async function register(req, res, next) {
 
   try {
     const exists = await prisma.user.findUnique({ where: { email } });
-    if (exists) return res.status(409).json({ message: "Email already in use" });
+    if (exists)
+      return res.status(409).json({ message: "Email already in use" });
     const passwordHash = await bcrypt.hash(password, 12);
     const user = await prisma.user.create({
       data: {
@@ -37,20 +48,37 @@ async function register(req, res, next) {
       },
       include: { sellerProfile: true },
     });
-    return res.status(201).json({ message: "Registration successful", user: publicUser(user) });
-  } catch (error) { return next(error); }
+    return res
+      .status(201)
+      .json({ message: "Registration successful", user: publicUser(user) });
+  } catch (error) {
+    return next(error);
+  }
 }
 
 async function login(req, res, next) {
   const parsed = loginSchema.safeParse(req.body);
   if (!parsed.success) return validationError(res, parsed);
   try {
-    const user = await prisma.user.findUnique({ where: { email: parsed.data.email }, include: { sellerProfile: true } });
-    if (!user || !(await bcrypt.compare(parsed.data.password, user.passwordHash))) return res.status(401).json({ message: "Invalid email or password" });
-    if (!user.isActive) return res.status(403).json({ message: "This account is inactive" });
+    const user = await prisma.user.findUnique({
+      where: { email: parsed.data.email },
+      include: { sellerProfile: true },
+    });
+    if (
+      !user ||
+      !(await bcrypt.compare(parsed.data.password, user.passwordHash))
+    )
+      return res.status(401).json({ message: "Invalid email or password" });
+    if (!user.isActive)
+      return res.status(403).json({ message: "This account is inactive" });
     res.cookie("refreshToken", createRefreshToken(user), refreshCookieOptions);
-    return res.json({ accessToken: createAccessToken(user), user: publicUser(user) });
-  } catch (error) { return next(error); }
+    return res.json({
+      accessToken: createAccessToken(user),
+      user: publicUser(user),
+    });
+  } catch (error) {
+    return next(error);
+  }
 }
 
 async function refreshToken(req, res, next) {
@@ -58,18 +86,34 @@ async function refreshToken(req, res, next) {
   if (!token) return res.status(401).json({ message: "Refresh token missing" });
   try {
     const payload = jwt.verify(token, requireSecret("JWT_REFRESH_SECRET"));
-    const user = await prisma.user.findUnique({ where: { id: payload.sub }, include: { sellerProfile: true } });
-    if (!user || !user.isActive) return res.status(401).json({ message: "Account is unavailable" });
-    return res.json({ accessToken: createAccessToken(user), user: publicUser(user) });
+    const user = await prisma.user.findUnique({
+      where: { id: payload.sub },
+      include: { sellerProfile: true },
+    });
+    if (!user || !user.isActive)
+      return res.status(401).json({ message: "Account is unavailable" });
+    return res.json({
+      accessToken: createAccessToken(user),
+      user: publicUser(user),
+    });
   } catch (error) {
-    if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") return res.status(401).json({ message: "Invalid or expired refresh token" });
+    if (
+      error.name === "JsonWebTokenError" ||
+      error.name === "TokenExpiredError"
+    )
+      return res
+        .status(401)
+        .json({ message: "Invalid or expired refresh token" });
     return next(error);
   }
 }
 
 function logout(req, res) {
-  res.clearCookie("refreshToken", { ...refreshCookieOptions, maxAge: undefined });
+  res.clearCookie("refreshToken", {
+    ...refreshCookieOptions,
+    maxAge: undefined,
+  });
   return res.status(204).send();
 }
 
-module.exports = { register, login, refreshToken, logout };
+export { register, login, refreshToken, logout };

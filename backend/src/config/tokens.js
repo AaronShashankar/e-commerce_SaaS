@@ -1,4 +1,4 @@
-const jwt = require("jsonwebtoken");
+import jwt from "jsonwebtoken";
 
 const accessTokenOptions = { expiresIn: "15m" };
 const refreshTokenOptions = { expiresIn: "7d" };
@@ -12,11 +12,19 @@ function requireSecret(name) {
 }
 
 function createAccessToken(user) {
-  return jwt.sign({ sub: user.id, email: user.email, role: user.role }, requireSecret("JWT_ACCESS_SECRET"), accessTokenOptions);
+  return jwt.sign(
+    { sub: user.id, email: user.email, role: user.role },
+    requireSecret("JWT_ACCESS_SECRET"),
+    accessTokenOptions,
+  );
 }
 
 function createRefreshToken(user) {
-  return jwt.sign({ sub: user.id, role: user.role }, requireSecret("JWT_REFRESH_SECRET"), refreshTokenOptions);
+  return jwt.sign(
+    { sub: user.id, role: user.role },
+    requireSecret("JWT_REFRESH_SECRET"),
+    refreshTokenOptions,
+  );
 }
 
 const refreshCookieOptions = {
@@ -27,4 +35,9 @@ const refreshCookieOptions = {
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
-module.exports = { createAccessToken, createRefreshToken, refreshCookieOptions, requireSecret };
+export {
+  createAccessToken,
+  createRefreshToken,
+  refreshCookieOptions,
+  requireSecret,
+};

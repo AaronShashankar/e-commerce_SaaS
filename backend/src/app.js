@@ -1,9 +1,11 @@
-const express = require("express");
-const cors = require("cors");
-const cookieParser = require("cookie-parser");
-require("dotenv").config();
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import dotenv from "dotenv";
 
-const authRoutes = require("./routes/auth.routes");
+import authRoutes from "./routes/auth.routes.js";
+
+dotenv.config();
 
 const app = express();
 
@@ -33,4 +35,4 @@ app.use((error, req, res, next) => {
   res.status(500).json({ message: "Internal server error" });
 });
 
-module.exports = app;
+export default app;
