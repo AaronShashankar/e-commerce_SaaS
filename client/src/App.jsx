@@ -5,9 +5,9 @@ import { ProtectedRoute } from "./routes/ProtectedRoute.jsx";
 import {
   BuyerHome,
   SellerDashboard,
-  SellerPending,
   Unauthorized,
 } from "./pages/Pages.jsx";
+import SellerStatusGate from "./components/seller/SellerStatusGate.jsx";
 
 export default function App() {
   return (
@@ -24,18 +24,10 @@ export default function App() {
         }
       />
       <Route
-        path="/seller/pending"
-        element={
-          <ProtectedRoute roles={["seller"]}>
-            <SellerPending />
-          </ProtectedRoute>
-        }
-      />
-      <Route
         path="/seller/dashboard"
         element={
           <ProtectedRoute roles={["seller"]}>
-            <SellerDashboard />
+            <SellerStatusGate><SellerDashboard /></SellerStatusGate>
           </ProtectedRoute>
         }
       />

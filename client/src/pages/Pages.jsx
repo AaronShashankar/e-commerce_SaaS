@@ -1,4 +1,4 @@
-import { useAuth } from "../context/AuthContext.jsx";
+import { useAuth } from "../hooks/useAuth.js";
 function Shell({ children }) {
   const { user, logout } = useAuth();
   return (
@@ -40,7 +40,7 @@ export function SellerDashboard() {
     </Shell>
   );
 }
-export function SellerPending() {
+export function SellerPending({ seller }) {
   return (
     <Shell>
       <section className="mt-14 rounded-2xl border border-amber-200 bg-amber-50 p-8">
@@ -49,11 +49,35 @@ export function SellerPending() {
         </h1>
         <p className="mt-2 text-slate-700">
           You can sign in, but product listing will be available after approval.
+          We received your application for{" "}
+          <strong>{seller?.businessName}</strong>.
         </p>
       </section>
     </Shell>
   );
 }
+
+export function SellerRejected({ seller }) {
+  return (
+    <Shell>
+      <section className="mt-14 rounded-2xl border border-red-200 bg-red-50 p-8">
+        <h1 className="text-2xl font-bold">
+          Your seller application was not approved
+        </h1>
+        <p className="mt-2 text-slate-700">
+          {seller.rejectionReason || "No reason was provided."}
+        </p>
+        <a
+          className="mt-5 inline-block text-indigo-700 underline"
+          href="mailto:support@example.com?subject=Seller%20application"
+        >
+          Contact support or re-apply
+        </a>
+      </section>
+    </Shell>
+  );
+}
+
 export function Unauthorized() {
   return (
     <main className="p-10 text-center">

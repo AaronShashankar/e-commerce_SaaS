@@ -1,4 +1,5 @@
 import { useAuth } from "../context/AuthContext.jsx";
+import { Link } from "react-router-dom";
 export default function Dashboard() {
   const { user, logout } = useAuth();
   return (
@@ -15,8 +16,9 @@ export default function Dashboard() {
       <section className="mt-10 rounded-2xl bg-white p-8 shadow">
         <p>Signed in as {user.email}.</p>
         <p className="mt-2 text-slate-600">
-          Seller approval management can be added here next.
+          Review seller applications and manage approved accounts.
         </p>
+        <Link className="mt-5 inline-block rounded bg-indigo-600 px-4 py-2 text-white" to="/sellers">Manage sellers</Link>
       </section>
     </main>
   );

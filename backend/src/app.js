@@ -4,6 +4,8 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 
 import authRoutes from "./routes/auth.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
+import sellerRoutes from "./routes/seller.routes.js";
 
 dotenv.config();
 
@@ -26,6 +28,8 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/seller", sellerRoutes);
 
 app.use((error, req, res, next) => {
   if (error.message === "Origin not allowed by CORS") {

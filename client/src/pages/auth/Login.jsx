@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext.jsx";
+import { useAuth } from "../../hooks/useAuth.js";
 import AuthLayout from "../../components/common/AuthLayout.jsx";
 export default function Login() {
   const { login } = useAuth();
@@ -17,9 +17,7 @@ export default function Login() {
       const user = await login(form);
       navigate(
         user.role === "seller"
-          ? user.approvalStatus === "pending"
-            ? "/seller/pending"
-            : "/seller/dashboard"
+          ? "/seller/dashboard"
           : location.state?.from?.pathname || "/",
         { replace: true },
       );

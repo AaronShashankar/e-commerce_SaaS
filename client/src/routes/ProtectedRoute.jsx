@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "../context/AuthContext.jsx";
+import { useAuth } from "../hooks/useAuth.js";
 export function ProtectedRoute({ roles, children }) {
   const { user, loading } = useAuth();
   const location = useLocation();
@@ -7,11 +7,5 @@ export function ProtectedRoute({ roles, children }) {
   if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
   if (!roles.includes(user.role))
     return <Navigate to="/unauthorized" replace />;
-  if (
-    user.role === "seller" &&
-    user.approvalStatus === "pending" &&
-    location.pathname !== "/seller/pending"
-  )
-    return <Navigate to="/seller/pending" replace />;
   return children;
 }

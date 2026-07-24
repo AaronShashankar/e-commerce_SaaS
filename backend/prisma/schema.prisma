@@ -34,6 +34,7 @@ model User {
   updatedAt    DateTime @updatedAt
   sellerProfile SellerProfile?
   buyerProfile  BuyerProfile?
+  auditLogs     AuditLog[]     @relation("AdminAuditLogs")
 }
 
 model SellerProfile {
@@ -42,8 +43,22 @@ model SellerProfile {
   businessName    String
   businessAddress String
   approvalStatus  ApprovalStatus @default(pending)
+  rejectionReason String?
   createdAt       DateTime       @default(now())
   user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  adminId     String
+  action      String
+  targetTable String
+  targetId    String
+  createdAt   DateTime @default(now())
+  admin       User     @relation("AdminAuditLogs", fields: [adminId], references: [id], onDelete: Restrict)
+
+  @@index([adminId])
+  @@index([targetTable, targetId])
 }
 
 model BuyerProfile {

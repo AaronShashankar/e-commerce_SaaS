@@ -18,8 +18,8 @@ export function setSessionRefreshHandler(handler) {
 api.interceptors.request.use((config) => {
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;
-    return config;
   }
+  return config;
 });
 
 api.interceptors.response.use(undefined, async (error) => {

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext.jsx";
+import { useAuth } from "../../hooks/useAuth.js";
 import AuthLayout from "../../components/common/AuthLayout.jsx";
 export default function Register() {
   const { register } = useAuth();
@@ -27,7 +27,9 @@ export default function Register() {
       await register(form);
       navigate("/login", { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message || "Unable to create account");
+      setError(
+        err.response?.data?.message || err.message || "Unable to create account",
+      );
     } finally {
       setBusy(false);
     }
