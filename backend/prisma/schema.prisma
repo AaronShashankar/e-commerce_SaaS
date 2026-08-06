@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -19,33 +17,74 @@ enum Role {
 }
 
 enum ApprovalStatus {
+  draft
   pending
   approved
   rejected
 }
 
+enum KycType {
+  citizenship
+  nid
+}
+
+enum NotificationType {
+  seller_submitted
+  seller_approved
+  seller_rejected
+  general
+}
+
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  passwordHash String
-  role         Role
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String
+  role          Role
+  firstName     String
+  lastName      String
+  phone         String
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
   sellerProfile SellerProfile?
   buyerProfile  BuyerProfile?
-  auditLogs     AuditLog[]     @relation("AdminAuditLogs")
+  auditLogs     AuditLog[]      @relation("AdminAuditLogs")
+  notifications Notification[]
+  refreshTokens RefreshToken[]
 }
 
 model SellerProfile {
-  id              String         @id @default(uuid())
-  userId          String         @unique
-  businessName    String
-  businessAddress String
-  approvalStatus  ApprovalStatus @default(pending)
-  rejectionReason String?
-  createdAt       DateTime       @default(now())
-  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                 String         @id @default(uuid())
+  userId             String         @unique
+  // Step 1 (filled at registration)
+  // Step 2 — Business Info
+  storeName          String?
+  businessType       String?
+  panOrVatNumber     String?
+  businessAddress    String?
+  // Step 3 — KYC
+  kycType            KycType?
+  kycNumber          String?
+  kycFrontImageUrl   String?
+  kycBackImageUrl    String?
+  selfieImageUrl     String?
+  // Step 4 — Bank Details
+  bankName           String?
+  accountHolderName  String?
+  accountNumber      String?
+  branchName         String?
+  // Step 5 — Store Profile
+  storeLogoUrl       String?
+  storeBannerUrl     String?
+  storeDescription   String?
+  pickupLocation     String?
+  // Onboarding tracking
+  onboardingStep     Int            @default(1)
+  approvalStatus     ApprovalStatus @default(draft)
+  rejectionReason    String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  user               User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model AuditLog {
@@ -66,4 +105,28 @@ model BuyerProfile {
   userId    String   @unique
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  type      NotificationType
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

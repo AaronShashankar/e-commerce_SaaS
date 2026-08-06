@@ -1,6 +1,6 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useSearchParams } from "react-router-dom";
 import Login from "./pages/auth/Login.jsx";
-import Register from "./pages/auth/Register.jsx";
+import RegisterBuyer from "./pages/auth/RegisterBuyer.jsx";
 import { ProtectedRoute } from "./routes/ProtectedRoute.jsx";
 import {
   BuyerHome,
@@ -8,42 +8,73 @@ import {
   Unauthorized,
 } from "./pages/Pages.jsx";
 import SellerStatusGate from "./components/seller/SellerStatusGate.jsx";
+import SellerOnboarding from "./pages/seller-onboarding/SellerOnboarding.jsx";
+import LandingPage from "./pages/LandingPage.jsx";
 import { useAuth } from "./hooks/useAuth.js";
 
-/** Redirects to the correct home route for the logged-in user's role.
- *  Sellers → /seller/dashboard, everyone else → /login or /  */
-function RoleBasedRedirect() {
+/** Root "/" handler: show landing if logged out, role-based redirect if logged in */
+function RootRoute() {
   const { user, loading } = useAuth();
-  if (loading) return <p className="p-8 text-center">Loading…</p>;
-  if (!user) return <Navigate to="/login" replace />;
+  if (loading) return <p className="p-8 text-center text-slate-500">Loading…</p>;
+  if (!user) return <LandingPage />;
   if (user.role === "seller") return <Navigate to="/seller/dashboard" replace />;
-  return <Navigate to="/" replace />;
+  if (user.role === "buyer") return <Navigate to="/shop" replace />;
+  return <LandingPage />;
+}
+
+/** Seller onboarding wrapper — reads ?resubmit=true from the URL */
+function OnboardingRoute() {
+  const [params] = useSearchParams();
+  const isResubmit = params.get("resubmit") === "true";
+  return <SellerOnboarding isResubmit={isResubmit} />;
 }
 
 export default function App() {
   return (
     <Routes>
+      {/* Public */}
+      <Route path="/" element={<RootRoute />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+      <Route path="/register" element={<RegisterBuyer />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
+
+      {/* Seller onboarding — accessible to unauthenticated (step 1) and authenticated sellers */}
+      <Route path="/register/seller" element={<SellerOnboarding />} />
+
+      {/* Authenticated seller onboarding resume / resubmit */}
       <Route
-        path="/"
+        path="/seller/onboarding"
+        element={
+          <ProtectedRoute roles={["seller"]}>
+            <OnboardingRoute />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Buyer home */}
+      <Route
+        path="/shop"
         element={
           <ProtectedRoute roles={["buyer"]}>
             <BuyerHome />
           </ProtectedRoute>
         }
       />
+
+      {/* Seller dashboard (guarded by SellerStatusGate) */}
       <Route
         path="/seller/dashboard"
         element={
           <ProtectedRoute roles={["seller"]}>
-            <SellerStatusGate><SellerDashboard /></SellerStatusGate>
+            <SellerStatusGate>
+              <SellerDashboard />
+            </SellerStatusGate>
           </ProtectedRoute>
         }
       />
-      {/* Catch-all: redirect each role to their correct home instead of blindly going to "/" */}
-      <Route path="*" element={<RoleBasedRedirect />} />
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

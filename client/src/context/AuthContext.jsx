@@ -23,13 +23,18 @@ export function AuthProvider({ children }) {
     const { data } = await api.post("/auth/login", credentials);
     setAccessToken(data.accessToken);
     setUser(data.user);
-    return data.user;
+    return data;
   }
 
+  /** Register and immediately log the user in (both buyer and seller now return tokens) */
   async function register(details) {
-    return (await api.post("/auth/register", details)).data;
+    const { data } = await api.post("/auth/register", details);
+    setAccessToken(data.accessToken);
+    setUser(data.user);
+    // data.onboardingRequired is true for sellers
+    return data;
   }
-  
+
   async function logout() {
     try {
       await api.post("/auth/logout");
@@ -38,7 +43,7 @@ export function AuthProvider({ children }) {
       setUser(null);
     }
   }
-  
+
   return (
     <AuthContext.Provider value={{ user, loading, login, register, logout }}>
       {children}

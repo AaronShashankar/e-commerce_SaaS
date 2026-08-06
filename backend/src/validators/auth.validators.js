@@ -1,32 +1,49 @@
 import { z } from "zod";
 
 const email = z.string().trim().email("Enter a valid email address").max(255);
+
 const password = z
   .string()
   .min(8, "Password must be at least 8 characters")
-  .max(72);
+  .max(72)
+  .refine((v) => /\d/.test(v), "Password must contain at least one number");
+
+const firstName = z
+  .string()
+  .trim()
+  .min(1, "First name is required")
+  .max(60, "First name is too long");
+
+const lastName = z
+  .string()
+  .trim()
+  .min(1, "Last name is required")
+  .max(60, "Last name is too long");
+
+// Loose phone: 7–15 chars, digits/spaces/dashes/plus
+const phone = z
+  .string()
+  .trim()
+  .regex(/^[+]?[\d\s\-]{7,15}$/, "Enter a valid phone number");
 
 const registerSchema = z
   .object({
+    firstName,
+    lastName,
     email,
+    phone,
     password,
+    confirmPassword: z.string().min(1, "Please confirm your password"),
     role: z.enum(["seller", "buyer"]),
-    businessName: z.preprocess(v => v || undefined, z.string().trim().min(2).max(120).optional()),
-    businessAddress: z.preprocess(v => v || undefined, z.string().trim().min(5).max(300).optional()),
   })
   .superRefine((data, ctx) => {
-    if (data.role === "seller" && !data.businessName)
+    if (data.password !== data.confirmPassword) {
       ctx.addIssue({
         code: "custom",
-        path: ["businessName"],
-        message: "Business name is required for sellers",
+        path: ["confirmPassword"],
+        message: "Passwords do not match",
       });
-    if (data.role === "seller" && !data.businessAddress)
-      ctx.addIssue({
-        code: "custom",
-        path: ["businessAddress"],
-        message: "Business address is required for sellers",
-      });
+    }
   });
 
 const loginSchema = z.object({
